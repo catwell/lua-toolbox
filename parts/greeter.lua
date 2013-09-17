@@ -18,14 +18,14 @@ local app = {
   name = "greeter.",
 }
 
-app[{greet = "/:login"}] = respond_to {
+app[{greet = "/:email"}] = respond_to {
   GET = capture_errors(function(self)
     assert_valid(self.params, {
-      {"login", min_length = 2, max_length = 128},
+      {"email", is_email = true, max_length = 128},
     })
-    local user = model.get_user_by_login(self.params.login)
+    local user = model.User.get_by_email(self.params.email)
     if user then
-      self.name = user.fullname
+      self.name = user:get_fullname()
     else
       yield_error("unexpected guest")
     end
@@ -35,8 +35,5 @@ app[{greet = "/:login"}] = respond_to {
     }
   end),
 }
-
--- BELOW: This does not work:
--- app.layout = require "views.greeter.layout"
 
 return lua.class(app, lapis.Application)

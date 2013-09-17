@@ -1,5 +1,6 @@
 local lua = require "lapis.lua"
 local lapis = require "lapis.init"
+require "extensions"
 
 local lapis_application = require "lapis.application"
 local respond_to = lapis_application.respond_to
@@ -16,8 +17,9 @@ local app = {}
 app[{home = "/"}] = respond_to {
   GET = function(self)
     self.title = cfg.appname
+    local email = "johndoe@example.com"
     return self:html(function()
-      a({href = self:url_for("greeter.greet", {login = "tester"})}, "greet")
+      a({href = self:url_for("greeter.greet", {email = email})}, "greet")
     end)
   end,
 }
