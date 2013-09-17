@@ -1,6 +1,6 @@
 import config from require "lapis.config"
 
-_appname = "badakhshan"
+_appname = "luatoolbox"
 _session_name = _appname .. "_session"
 
 config "development", ->

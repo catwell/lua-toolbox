@@ -1,8 +1,8 @@
-# Badakhshan
+# Lua Toolbox
 
 ## Presentation
 
-Badakhshan is a skeleton application using [Lapis](http://leafo.net/lapis/). Logic is written in [Lua](http://www.lua.org/), views and configuration in [MoonScript](http://moonscript.org/). The datastore is [Redis](http://redis.io/).
+Inspired by [The Ruby Toolbox](https://www.ruby-toolbox.com/).
 
 ## Usage
 
