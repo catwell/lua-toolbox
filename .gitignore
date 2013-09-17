@@ -1,0 +1,6 @@
+*_temp/
+logs/
+config.lua
+views/*.lua
+views/*/*.lua
+nginx.conf.compiled
