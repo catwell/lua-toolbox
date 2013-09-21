@@ -1,12 +1,10 @@
 -- NOTES:
 -- I took a few shortcuts:
 -- - nothing is atomic for now
--- - passwords are hashed as MD5 (!!)
--- Those issues should be fixed before any kind of release.
 
 
 local redis = require "redis"
-local md5 = require "md5"
+local bcrypt = require "bcrypt"
 
 local cfg = require("lapis.config").get()
 local pfx = cfg.appname
@@ -45,14 +43,14 @@ end
 
 local user_check_password = function(self, pwd)
   assert(type(pwd) == "string")
-  local hash = assert(md5.sumhexa(pwd))
-  local verif = R:hget(rk("user", self.id), "pwhash")
-  return hash == verif
+  local hash = R:hget(rk("user", self.id), "pwhash")
+  return bcrypt.verify(pwd, hash)
 end
 
 local user_set_password = function(self, pwd)
   assert(type(pwd) == "string")
-  local hash = assert(md5.sumhexa(pwd))
+  local salt = bcrypt.salt(10)
+  local hash = assert(bcrypt.digest(pwd, salt))
   R:hset(rk("user", self.id), "pwhash", hash)
 end
 
