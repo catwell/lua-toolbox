@@ -12,6 +12,7 @@ local assert_valid = lapis_validate.assert_valid
 local fmt = string.format
 
 local model = require "model"
+local User = model.User
 
 local app = {
   path = "",
@@ -27,7 +28,7 @@ app[{login = "/login"}] = respond_to {
       {"email", is_email = true, max_length = 128},
       {"password", min_length = 5, max_length = 128},
     })
-    local u = model.User.get_by_email(self.params.email)
+    local u = User.get_by_email(self.params.email)
     if not u then
       yield_error(fmt("user %s not found", self.params.email))
     end
@@ -39,10 +40,35 @@ app[{login = "/login"}] = respond_to {
   end),
 }
 
+app[{signup = "/signup"}] = respond_to {
+  GET = function(self)
+    return {render = true}
+  end,
+  POST = capture_errors(function(self)
+    assert_valid(self.params, {
+      {"email", is_email = true, max_length = 128},
+      {"fullname", min_length = 2, max_length = 128},
+      {"password", min_length = 5, max_length = 128},
+      {"confirm", equals = self.params.password},
+    })
+    if User.resolve_email(self.params.email) then
+      yield_error(fmt("user %s already exists", self.params.email))
+    end
+    local u = User.create{
+      email = self.params.email,
+      fullname = self.params.fullname,
+      password = self.params.password,
+    }
+    self.session.current_user_id = u.id
+    return {redirect_to = self:url_for("home")}
+  end),
+}
+
 app[{logout = "/logout"}] = respond_to {
   GET = function(self)
     self.session.current_user_id = false -- should be nil
-    return {redirect_to = self:url_for("home")}
+    redir = self.params.redirect or "home"
+    return {redirect_to = self:url_for(redir)}
   end,
 }
 

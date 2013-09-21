@@ -7,4 +7,12 @@ html, body { height: 100%; }
 
 /* end of resets */
 
-h1 { color: #00ff00; }
+label {
+  display: block;
+  clear: both;
+}
+
+input {
+  display: block;
+  clear: both;
+}

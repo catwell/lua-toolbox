@@ -100,6 +100,7 @@ User.create = function(t)
   u:set_email(email)
   if t.password then u:set_password(t.password) end
   if t.fullname then u:set_fullname(t.fullname) end
+  return u
 end
 
 local init = function()
