@@ -77,10 +77,12 @@ User.exists = function(id)
 end
 
 User.resolve_email = function(email)
+  assert(type(email) == "string")
   return tonumber(R:hget(rk("user", "by_email"), email))
 end
 
 User.get_by_email = function(email)
+  assert(type(email) == "string")
   local id = User.resolve_email(email)
   if id then
     return User.new(id)
