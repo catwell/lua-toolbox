@@ -12,4 +12,4 @@ class Home extends Widget
       h1 "Modules"
       ul ->
         for m in *@modules
-          li -> a href: "#", m\get_name()
+          li -> a href: @url_for("main.module", id: m.id), m\get_name()

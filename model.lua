@@ -18,6 +18,12 @@ local rk = function(...)
 end
 
 local User = {}
+local Module = {}
+
+local get_id = function(x)
+  if type(x) == "table" then x = x.id end
+  return assert(tonumber(x))
+end
 
 --- User
 
@@ -56,6 +62,28 @@ local user_set_password = function(self, pwd)
   R:hset(rk("user", self.id), "pwhash", hash)
 end
 
+local user_endorse = function(self, m)
+  m = get_id(m)
+  R:sadd(rk("user", self.id, "endorsements"), m)
+  R:sadd(rk("module", m, "endorsers"), self.id)
+end
+
+local user_deendorse = function(self, m)
+  m = get_id(m)
+  R:srem(rk("user", self.id, "endorsements"), m)
+  R:srem(rk("module", m, "endorsers"), self.id)
+end
+
+local user_endorsements = function(self)
+  local ids = R:smembers(rk("user", self.id, "endorsements"))
+  return Module.all_with_ids(ids)
+end
+
+local user_endorses = function(self, m)
+  m = get_id(m)
+  return R:sismember(rk("user", self.id, "endorsements"), m)
+end
+
 local user_methods = {
   get_email = user_get_email,
   set_email = user_set_email,
@@ -63,12 +91,30 @@ local user_methods = {
   set_fullname = user_set_fullname,
   check_password = user_check_password,
   set_password = user_set_password,
+  endorse = user_endorse,
+  deendorse = user_deendorse,
+  endorsements = user_endorsements,
+  endorses = user_endorses,
 }
 
 User.new = function(id)
   id = assert(tonumber(id))
   local r = {id = id}
   return setmetatable(r, {__index=user_methods})
+end
+
+User.all_with_ids = function(ids)
+  assert(type(ids) == "table")
+  local r = {}
+  for i=1,#ids do
+    r[i] = User.new(ids[i])
+  end
+  return r
+end
+
+User.all = function()
+  local ids = R:hvals(rk("user", "by_email"))
+  return User.all_with_ids(ids)
 end
 
 User.exists = function(id)
@@ -103,8 +149,6 @@ User.create = function(t)
   return u
 end
 
-local Module = {}
-
 --- Module
 
 local load_rockspec = function(rs)
@@ -135,10 +179,16 @@ local module_set_name = function(self, name)
   R:hset(rk("module", self.id), "name", name)
 end
 
+local module_endorsers = function(self)
+  local ids = R:smembers(rk("module", self.id, "endorsers"))
+  return User.all_with_ids(ids)
+end
+
 local module_methods = {
   update_with_rockspec = module_update_with_rockspec,
   get_name = module_get_name,
   set_name = module_set_name,
+  endorsers = module_endorsers,
 }
 
 Module.new = function(id)
@@ -147,13 +197,18 @@ Module.new = function(id)
   return setmetatable(r, {__index=module_methods})
 end
 
-Module.all = function()
-  local ids = R:hvals(rk("module", "by_name"))
+Module.all_with_ids = function(ids)
+  assert(type(ids) == "table")
   local r = {}
   for i=1,#ids do
     r[i] = Module.new(ids[i])
   end
   return r
+end
+
+Module.all = function()
+  local ids = R:hvals(rk("module", "by_name"))
+  return Module.all_with_ids(ids)
 end
 
 Module.exists = function(id)
