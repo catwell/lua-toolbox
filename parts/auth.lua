@@ -36,7 +36,7 @@ app[{login = "/login"}] = respond_to {
       yield_error(fmt("invalid password for user %s", self.params.email))
     end
     self.session.current_user_id = u.id
-    return {redirect_to = self:url_for("home")}
+    return {redirect_to = self:url_for("main.home")}
   end),
 }
 
@@ -60,14 +60,14 @@ app[{signup = "/signup"}] = respond_to {
       password = self.params.password,
     }
     self.session.current_user_id = u.id
-    return {redirect_to = self:url_for("home")}
+    return {redirect_to = self:url_for("main.home")}
   end),
 }
 
 app[{logout = "/logout"}] = respond_to {
   GET = function(self)
     self.session.current_user_id = false -- should be nil
-    redir = self.params.redirect or "home"
+    redir = self.params.redirect or "main.home"
     return {redirect_to = self:url_for(redir)}
   end,
 }

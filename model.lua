@@ -1,10 +1,12 @@
--- NOTES:
--- I took a few shortcuts:
--- - nothing is atomic for now
-
+-- NOTE: nothing is atomic for now
 
 local redis = require "redis"
 local bcrypt = require "bcrypt"
+
+-- monkey-patch required to make rocks loading work
+local lr_fetch = require "luarocks.fetch"
+local lr_path = require "luarocks.path"
+lr_path.configure_paths = function(rockspec) end
 
 local cfg = require("lapis.config").get()
 local pfx = cfg.appname
@@ -101,6 +103,91 @@ User.create = function(t)
   return u
 end
 
+local Module = {}
+
+--- Module
+
+local load_rockspec = function(rs)
+  if type(rs) == "string" then
+    rs = lr_fetch.load_rockspec(rs)
+  end
+  assert(type(rs) == "table")
+  return rs
+end
+
+local module_update_with_rockspec = function(self, rs)
+  rs = load_rockspec(rs)
+  assert(rs and rs.name)
+  self:set_name(rs.name)
+end
+
+local module_get_name = function(self)
+  return R:hget(rk("module", self.id), "name")
+end
+
+local module_set_name = function(self, name)
+  assert(type(name) == "string")
+  local old_name = self:get_name()
+  if old_name then
+    R:hdel(rk("module", "by_name"), name)
+  end
+  R:hset(rk("module", "by_name"), name, self.id)
+  R:hset(rk("module", self.id), "name", name)
+end
+
+local module_methods = {
+  update_with_rockspec = module_update_with_rockspec,
+  get_name = module_get_name,
+  set_name = module_set_name,
+}
+
+Module.new = function(id)
+  id = assert(tonumber(id))
+  local r = {id = id}
+  return setmetatable(r, {__index=module_methods})
+end
+
+Module.all = function()
+  local ids = R:hvals(rk("module", "by_name"))
+  local r = {}
+  for i=1,#ids do
+    r[i] = Module.new(ids[i])
+  end
+  return r
+end
+
+Module.exists = function(id)
+  assert(type(id) == "number")
+  return R:hexists(rk("module", id), "name")
+end
+
+Module.resolve_name = function(name)
+  assert(type(name) == "string")
+  return tonumber(R:hget(rk("module", "by_name"), name))
+end
+
+Module.get_by_name = function(name)
+  assert(type(name) == "string")
+  local id = Module.resolve_name(name)
+  if id then
+    return Module.new(id)
+  else return nil end
+end
+
+Module.next_id = function()
+  return R:incr(rk("module", "next_id"))
+end
+
+Module.create = function(t)
+  rs = t.rockspec and load_rockspec(t.rockspec) or nil
+  if rs then assert(rs.name) end
+  local name = assert(t.name or (rs and rs.name))
+  assert(not Module.resolve_name(name))
+  local m =  Module.new( Module.next_id() )
+  m:set_name(name)
+  return m
+end
+
 local init = function()
   if cfg._name == "development" then
     if not User.resolve_email("johndoe@example.com") then
@@ -115,5 +202,7 @@ end
 
 return {
   User = User,
+  Module = Module,
   init = init,
+  load_rockspec = load_rockspec,
 }
