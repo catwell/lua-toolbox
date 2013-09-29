@@ -28,7 +28,7 @@ app[{login = "/login"}] = respond_to {
       {"email", is_email = true, max_length = 128},
       {"password", min_length = 5, max_length = 128},
     })
-    local u = User.get_by_email(self.params.email)
+    local u = User:get_by_email(self.params.email)
     if not u then
       yield_error(fmt("user %s not found", self.params.email))
     end
@@ -51,10 +51,10 @@ app[{signup = "/signup"}] = respond_to {
       {"password", min_length = 5, max_length = 128},
       {"confirm", equals = self.params.password},
     })
-    if User.resolve_email(self.params.email) then
+    if User:resolve_email(self.params.email) then
       yield_error(fmt("user %s already exists", self.params.email))
     end
-    local u = User.create{
+    local u = User:create{
       email = self.params.email,
       fullname = self.params.fullname,
       password = self.params.password,

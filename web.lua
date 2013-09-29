@@ -25,7 +25,7 @@ app:include(require "parts.main")
 app:before_filter(function(self)
   local id = self.session.current_user_id
   if id then
-    self.current_user = assert(model.User.new(id))
+    self.current_user = assert(model.User:new(id))
   end
 end)
 

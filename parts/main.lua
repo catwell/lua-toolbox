@@ -23,19 +23,19 @@ local app = {
 app[{home = "/"}] = respond_to {
   GET = function(self)
     self.title = cfg.appname
-    self.modules = Module.all()
+    self.modules = Module:all()
     return {render = true}
   end,
 }
 
 app[{["module"] = "/module/:id"}] = respond_to {
   GET = function(self)
-    self.module = Module.new(self.params.id)
+    self.module = Module:new(self.params.id)
     return {render = true}
   end,
   POST = function(self)
     local u = assert(self.current_user)
-    local m = Module.new(self.params.id)
+    local m = Module:new(self.params.id)
     local action = self.params.action
     assert(type(action) == "string")
     if action == "endorse" then
@@ -54,7 +54,7 @@ app[{["module"] = "/module/:id"}] = respond_to {
 
 app[{user = "/user/:id"}] = respond_to {
   GET = function(self)
-    self.user = User.new(self.params.id)
+    self.user = User:new(self.params.id)
     return {render = true}
   end,
 }
