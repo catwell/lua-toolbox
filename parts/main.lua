@@ -14,6 +14,7 @@ local cfg = require("lapis.config").get()
 local model = require "model"
 local User = model.User
 local Module = model.Module
+local Label = model.Label
 
 local app = {
   path = "",
@@ -33,21 +34,37 @@ app[{["module"] = "/module/:id"}] = respond_to {
     self.module = Module:new(self.params.id)
     return {render = true}
   end,
-  POST = function(self)
+  POST = capture_errors(function(self)
     local u = assert(self.current_user)
     local m = Module:new(self.params.id)
     local action = self.params.action
     assert(type(action) == "string")
+    self.module = m
     if action == "endorse" then
       assert(not u:endorses(m))
       u:endorse(m)
     elseif action == "deendorse" then
       assert(u:endorses(m))
       u:deendorse(m)
+    elseif action == "label" then
+      assert_valid(self.params, {
+        {"label", min_length = 3, max_length = 128},
+      })
+      l = Label:get_by_name(self.params.label)
+      if not l then
+        l = Label:create{name = self.params.label}
+      end
+      m:label(l)
     else
-      error("invalid action %s" % action)
+      error(fmt("invalid action %s", action))
     end
-    self.module = m
+    return {render = true}
+  end),
+}
+
+app[{["label"] = "/label/:id"}] = respond_to {
+  GET = function(self)
+    self.label = Label:new(self.params.id)
     return {render = true}
   end,
 }

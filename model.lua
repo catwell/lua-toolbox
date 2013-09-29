@@ -36,6 +36,15 @@ local Module = redismodel.new{
 Module:add_attribute("name")
 Module:add_index("name")
 
+local Label = redismodel.new{
+  redis = R,
+  prefix = pfx,
+  name = "label",
+}
+
+Label:add_attribute("name")
+Label:add_index("name")
+
 --- User
 
 User.methods.check_password = function(self, pwd)
@@ -115,6 +124,44 @@ Module.methods.endorsers = function(self)
   return User:all_with_ids(ids)
 end
 
+Module.methods.label = function(self, l)
+  assert(
+    (type(l) == "table")
+    and tonumber(l.id)
+  )
+  R:sadd(self:rk("labels"), l.id)
+  R:sadd(l:rk("modules"), self.id)
+end
+
+Module.methods.unlabel = function(self, l)
+  assert(
+    (type(l) == "table")
+    and tonumber(l.id)
+  )
+  R:srem(self:rk("labels"), l.id)
+  R:srem(l:rk("modules"), self.id)
+end
+
+Module.methods.labels = function(self)
+  local ids = R:smembers(self:rk("labels"))
+  return Label:all_with_ids(ids)
+end
+
+Module.methods.has_label = function(self, l)
+  assert(
+    (type(l) == "table")
+    and tonumber(l.id)
+  )
+  return R:sismember(self:rk("labels"), l.id)
+end
+
+--- Label
+
+Label.methods.modules = function(self)
+  local ids = R:smembers(self:rk("modules"))
+  return Module:all_with_ids(ids)
+end
+
 --- others
 
 local init = function()
@@ -132,6 +179,7 @@ end
 return {
   User = User,
   Module = Module,
+  Label = Label,
   init = init,
   load_rockspec = load_rockspec,
 }
