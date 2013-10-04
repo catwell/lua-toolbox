@@ -141,11 +141,21 @@ local setattr = function(self, attr, val)
   self.model.R:hset(self:rk(), attr, val)
 end
 
+local check_attributes = function(self, t)
+  for k,_ in pairs(self.model.attributes) do
+    if self["get_" .. k](self) ~= t[k] then
+      return false
+    end
+  end
+  return true
+end
+
 local base_methods = function()
   return {
     rk = rk,
     getattr = getattr,
     setattr = setattr,
+    check_attributes = check_attributes,
   }
 end
 

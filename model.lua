@@ -7,6 +7,7 @@ local redismodel = require "redismodel"
 -- monkey-patch required to make rocks loading work
 local lr_fetch = require "luarocks.fetch"
 local lr_path = require "luarocks.path"
+local lr_deps = require "luarocks.deps"
 lr_path.configure_paths = function(rockspec) end
 
 local cfg = require("lapis.config").get()
@@ -35,6 +36,7 @@ local Module = redismodel.new{
 
 Module:add_attribute("name")
 Module:add_index("name")
+Module:add_attribute("version")
 
 local Label = redismodel.new{
   redis = R,
@@ -114,9 +116,22 @@ Module.m_methods.create = function(cls, t)
 end
 
 Module.methods.update_with_rockspec = function(self, rs)
+  -- -> changed?
   rs = load_rockspec(rs)
-  assert(rs and rs.name)
-  self:set_name(rs.name)
+  assert(rs and rs.name and rs.version)
+  assert(rs.name == self:get_name())
+  local old_version = self:get_version()
+  if old_version then
+    if old_version == rs.version then
+      if self:check_attributes(rs) then
+        return false
+      end
+    elseif lr_deps.compare_versions(old_version, rs.version) then
+      return false
+    end
+  end
+  self:set_version(rs.version)
+  return true
 end
 
 Module.methods.endorsers = function(self)

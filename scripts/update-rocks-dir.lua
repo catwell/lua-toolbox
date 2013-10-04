@@ -12,10 +12,13 @@ for i=1,#fs do
   rs = model.load_rockspec(fs[i])
   m = Module:get_by_name(assert(rs.name))
   if m then
-    print("updated: " .. rs.name)
-    m:update_with_rockspec(rs)
+    if m:update_with_rockspec(rs) then
+      print("updated: " .. rs.name)
+    else
+      print("unchanged: " .. rs.name)
+    end
   else
-    print("created: " .. rs.name)
     Module:create{rockspec = rs}
+    print("created: " .. rs.name)
   end
 end
