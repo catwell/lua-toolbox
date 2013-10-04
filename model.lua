@@ -37,6 +37,8 @@ local Module = redismodel.new{
 Module:add_attribute("name")
 Module:add_index("name")
 Module:add_attribute("version")
+Module:add_attribute("url")
+Module:add_attribute("description")
 
 local Label = redismodel.new{
   redis = R,
@@ -104,6 +106,10 @@ local load_rockspec = function(rs)
     rs = lr_fetch.load_rockspec(rs)
   end
   assert(type(rs) == "table")
+  if type(rs.description) == "table" then
+    rs.url = rs.url or rs.description.homepage
+    rs.description = rs.description.summary
+  end
   return rs
 end
 
@@ -130,7 +136,9 @@ Module.methods.update_with_rockspec = function(self, rs)
       return false
     end
   end
-  self:set_version(rs.version)
+  for k,_ in pairs(self.model.attributes) do
+    if rs[k] then self["set_" .. k](self, rs[k]) end
+  end
   return true
 end
 
