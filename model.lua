@@ -88,6 +88,13 @@ User.methods.set_password = function(self, pwd)
   self:setattr("pwhash", hash)
 end
 
+local _super = User.methods.export
+User.methods.export = function(self)
+  local r = _super(self)
+  r.pwhash = self:getattr("pwhash")
+  return r
+end
+
 --- Module
 
 local load_rockspec = function(rs)

@@ -46,8 +46,16 @@ local rk = function(cls, ...)
   return table.concat({cls.prefix, cls.name, ...}, ":")
 end
 
+local used_name = function(cls, name)
+  return (
+    (name == "id") or
+    (cls.attributes[name]) or
+    (cls.nn_associations[name])
+  )
+end
+
 local add_attribute = function(cls, attr)
-  assert(not cls.attributes[attr])
+  assert(not used_name(cls, attr))
   cls.attributes[attr] = true
   cls.methods["get_" .. attr] = _getter(attr)
   cls.methods["set_" .. attr] = _simple_setter(attr)
@@ -109,6 +117,12 @@ local create = function(cls, t)
   return r
 end
 
+local export = function(cls)
+  local r = cls:all()
+  for i=1,#r do r[i] = r[i]:export() end
+  return r
+end
+
 base_m_methods = function()
   return {
     rk = rk,
@@ -120,6 +134,7 @@ base_m_methods = function()
     all = all,
     exists = exists,
     create = create,
+    export = export,
   }
 end
 
@@ -150,12 +165,25 @@ local check_attributes = function(self, t)
   return true
 end
 
+local export = function(self)
+  local r = {}
+  r.id = self.id
+  for k,_ in pairs(self.model.attributes) do
+    r[k] = self["get_" .. k](self)
+  end
+  for k,_ in pairs(self.model.nn_associations) do
+    r[k] = self.model.R:smembers(self:rk(k))
+  end
+  return r
+end
+
 local base_methods = function()
   return {
     rk = rk,
     getattr = getattr,
     setattr = setattr,
     check_attributes = check_attributes,
+    export = export,
   }
 end
 
@@ -231,11 +259,8 @@ local add_nn_assoc = function(t)
     (type(t.master_collection) == "string") and
     (type(t.slave_collection) == "string")
   )
-  assert(
-    (not master.attributes[t.master_collection]) and
-    (not master.nn_associations[t.master_collection])
-  )
-  master.nn_associations[t.master_collection] = true
+  assert(not used_name(t.master, t.master_collection))
+  t.master.nn_associations[t.master_collection] = true
   t.master.methods[t.assoc_create] = _nn_assoc_create(
     t.master_collection, t.slave_collection
   )
