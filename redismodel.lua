@@ -1,16 +1,16 @@
-local _getter = function(cls, attr)
+local _getter = function(attr)
   return function(self)
     return self:getattr(attr)
   end
 end
 
-local _simple_setter = function(cls, attr)
+local _simple_setter = function(attr)
   return function(self, val)
     return self:setattr(attr, val)
   end
 end
 
-local _indexed_setter = function(cls, attr)
+local _indexed_setter = function(attr)
   return function(self, val)
     assert(
       (type(val) == "string") or
@@ -18,22 +18,22 @@ local _indexed_setter = function(cls, attr)
     )
     local old_val = self["get_" .. attr](self)
     if old_val then
-      cls.R:hdel(cls:rk("_by_" .. attr), val)
+      self.model.R:hdel(self.model:rk("_by_" .. attr), val)
     end
-    cls.R:hset(cls:rk("_by_" .. attr), val, self.id)
+    self.model.R:hset(self.model:rk("_by_" .. attr), val, self.id)
     self:setattr(attr, val)
   end
 end
 
-local _resolver = function(cls, attr)
-  return function(self, val)
+local _resolver = function(attr)
+  return function(cls, val)
     assert(type(val) == "string")
-    return tonumber(self.R:hget(self:rk("_by_" .. attr), val))
+    return tonumber(cls.R:hget(cls:rk("_by_" .. attr), val))
   end
 end
 
-local _indexed_getter = function(cls, attr)
-  return function(self, val)
+local _indexed_getter = function(attr)
+  return function(cls, val)
     assert(type(val) == "string")
     local id = cls["resolve_" .. attr](cls, val)
     if id then
@@ -49,8 +49,8 @@ end
 local add_attribute = function(cls, attr)
   assert(not cls.attributes[attr])
   cls.attributes[attr] = true
-  cls.methods["get_" .. attr] = _getter(cls, attr)
-  cls.methods["set_" .. attr] = _simple_setter(cls, attr)
+  cls.methods["get_" .. attr] = _getter(attr)
+  cls.methods["set_" .. attr] = _simple_setter(attr)
 end
 
 local add_index = function(cls, attr)
@@ -59,9 +59,9 @@ local add_index = function(cls, attr)
     (not cls.indexed[attr])
   )
   cls.indexed[attr] = true
-  cls.methods["set_" .. attr] = _indexed_setter(cls, attr)
-  cls.m_methods["resolve_" .. attr] = _resolver(cls, attr)
-  cls.m_methods["get_by_" .. attr] = _indexed_getter(cls, attr)
+  cls.methods["set_" .. attr] = _indexed_setter(attr)
+  cls.m_methods["resolve_" .. attr] = _resolver(attr)
+  cls.m_methods["get_by_" .. attr] = _indexed_getter(attr)
 end
 
 local new = function(cls, id)
