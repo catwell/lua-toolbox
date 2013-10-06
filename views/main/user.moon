@@ -2,9 +2,14 @@ import Widget from require "lapis.html"
 
 class User extends Widget
   content: =>
-    h1 @user\get_fullname()
     div id: "endorsements", ->
-      h1 "Endorsements"
-      ul ->
+      ul class: "modules-list", ->
         for m in *@user\endorsements()
-          li -> a href: @url_for("main.module", id: m.id), m\get_name()
+          li ->
+            if @current_user
+              button class: "module-endorse #{@current_user\endorses(m) and "endorsed" or ""}", ["data-module-id"]: m.id, ->
+                span class: "regular", "endorse"
+                span class: "endorsed", "endorsed"
+                span class: "hover", "deendorse"
+            a class: "module-name", href: @url_for("main.module", id: m.id), m\get_name()
+            p class: "module-description", m\get_description()

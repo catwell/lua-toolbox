@@ -21,6 +21,7 @@ app.layout = require "views.layout"
 app = lua.class(app, lapis.Application)
 app:include(require "parts.auth")
 app:include(require "parts.main")
+app:include(require "parts.api")
 
 app:before_filter(function(self)
   local id = self.session.current_user_id

@@ -2,14 +2,14 @@ import Widget from require "lapis.html"
 
 class Home extends Widget
   content: =>
-    div id: "userlogin", ->
-      if @current_user
-        p "Logged in as " .. @current_user\get_fullname()
-        a href: @url_for("auth.logout"), "logout"
-      else
-        a href: @url_for("auth.login"), "login"
     div id: "modules", ->
-      h1 "Modules"
-      ul ->
+      ul class: "modules-list", ->
         for m in *@modules
-          li -> a href: @url_for("main.module", id: m.id), m\get_name()
+          li ->
+            if @current_user
+              button class: "module-endorse #{@current_user\endorses(m) and "endorsed" or ""}", ["data-module-id"]: m.id, ->
+                span class: "regular", "endorse"
+                span class: "endorsed", "endorsed"
+                span class: "hover", "deendorse"
+            a class: "module-name", href: @url_for("main.module", id: m.id), m\get_name()
+            p class: "module-description", m\get_description()

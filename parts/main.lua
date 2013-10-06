@@ -23,7 +23,6 @@ local app = {
 
 app[{home = "/"}] = respond_to {
   GET = function(self)
-    self.title = cfg.appname
     self.modules = Module:all()
     return {render = true}
   end,
