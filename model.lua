@@ -108,7 +108,7 @@ local load_rockspec = function(rs)
   assert(type(rs) == "table")
   if type(rs.description) == "table" then
     rs.url = rs.url or rs.description.homepage
-    rs.description = rs.description.summary
+    rs.description = rs.description.summary or rs.description.detailed
   end
   return rs
 end
