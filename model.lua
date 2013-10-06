@@ -49,6 +49,26 @@ local Label = redismodel.new{
 Label:add_attribute("name")
 Label:add_index("name")
 
+redismodel.add_nn_assoc {
+  master = User,
+  slave = Module,
+  assoc_create = "endorse",
+  assoc_remove = "deendorse",
+  assoc_check = "endorses",
+  master_collection = "endorsements",
+  slave_collection = "endorsers",
+}
+
+redismodel.add_nn_assoc {
+  master = Module,
+  slave = Label,
+  assoc_create = "label",
+  assoc_remove = "unlabel",
+  assoc_check = "has_label",
+  master_collection = "labels",
+  slave_collection = "modules",
+}
+
 --- User
 
 User.methods.check_password = function(self, pwd)
@@ -66,37 +86,6 @@ User.methods.set_password = function(self, pwd)
   local salt = bcrypt.salt(10)
   local hash = assert(bcrypt.digest(pwd, salt))
   self:setattr("pwhash", hash)
-end
-
-User.methods.endorse = function(self, m)
-  assert(
-    (type(m) == "table")
-    and tonumber(m.id)
-  )
-  R:sadd(self:rk("endorsements"), m.id)
-  R:sadd(m:rk("endorsers"), self.id)
-end
-
-User.methods.deendorse = function(self, m)
-  assert(
-    (type(m) == "table")
-    and tonumber(m.id)
-  )
-  R:srem(self:rk("endorsements"), m.id)
-  R:srem(m:rk("endorsers"), self.id)
-end
-
-User.methods.endorsements = function(self)
-  local ids = R:smembers(self:rk("endorsements"))
-  return Module:all_with_ids(ids)
-end
-
-User.methods.endorses = function(self, m)
-  assert(
-    (type(m) == "table")
-    and tonumber(m.id)
-  )
-  return R:sismember(self:rk("endorsements"), m.id)
 end
 
 --- Module
@@ -140,49 +129,6 @@ Module.methods.update_with_rockspec = function(self, rs)
     if rs[k] then self["set_" .. k](self, rs[k]) end
   end
   return true
-end
-
-Module.methods.endorsers = function(self)
-  local ids = R:smembers(self:rk("endorsers"))
-  return User:all_with_ids(ids)
-end
-
-Module.methods.label = function(self, l)
-  assert(
-    (type(l) == "table")
-    and tonumber(l.id)
-  )
-  R:sadd(self:rk("labels"), l.id)
-  R:sadd(l:rk("modules"), self.id)
-end
-
-Module.methods.unlabel = function(self, l)
-  assert(
-    (type(l) == "table")
-    and tonumber(l.id)
-  )
-  R:srem(self:rk("labels"), l.id)
-  R:srem(l:rk("modules"), self.id)
-end
-
-Module.methods.labels = function(self)
-  local ids = R:smembers(self:rk("labels"))
-  return Label:all_with_ids(ids)
-end
-
-Module.methods.has_label = function(self, l)
-  assert(
-    (type(l) == "table")
-    and tonumber(l.id)
-  )
-  return R:sismember(self:rk("labels"), l.id)
-end
-
---- Label
-
-Label.methods.modules = function(self)
-  local ids = R:smembers(self:rk("modules"))
-  return Module:all_with_ids(ids)
 end
 
 --- others

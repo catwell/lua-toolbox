@@ -171,6 +171,7 @@ local m_new = function(t)
     name = t.name,
     attributes = {},
     indexed = {},
+    nn_associations = {},
     methods = base_methods(),
     m_methods = base_m_methods(),
   }
@@ -178,4 +179,81 @@ local m_new = function(t)
   return r
 end
 
-return {new = m_new}
+local _nn_assoc_create = function(master_collection, slave_collection)
+  return function(self, m)
+    local R = assert(self.model.R)
+    assert(
+      (type(m) == "table")
+      and tonumber(m.id)
+    )
+    R:sadd(self:rk(master_collection), m.id)
+    R:sadd(m:rk(slave_collection), self.id)
+  end
+end
+
+local _nn_assoc_remove = function(master_collection, slave_collection)
+  return function(self, m)
+    local R = assert(self.model.R)
+    assert(
+      (type(m) == "table")
+      and tonumber(m.id)
+    )
+    R:srem(self:rk(master_collection), m.id)
+    R:srem(m:rk(slave_collection), self.id)
+  end
+end
+
+local _nn_assoc_check = function(master_collection)
+  return function(self, m)
+    local R = assert(self.model.R)
+    assert(
+      (type(m) == "table")
+      and tonumber(m.id)
+    )
+    return R:sismember(self:rk(master_collection), m.id)
+  end
+end
+
+local _nn_assoc_get_collection = function(cls, collection)
+  return function(self)
+    local ids = self.model.R:smembers(self:rk(collection))
+    return cls:all_with_ids(ids)
+  end
+end
+
+local add_nn_assoc = function(t)
+  assert(
+    (type(t.master) == "table") and
+    (type(t.slave) == "table") and
+    (type(t.assoc_create) == "string") and
+    (type(t.assoc_remove) == "string") and
+    (type(t.assoc_check) == "string") and
+    (type(t.master_collection) == "string") and
+    (type(t.slave_collection) == "string")
+  )
+  assert(
+    (not master.attributes[t.master_collection]) and
+    (not master.nn_associations[t.master_collection])
+  )
+  master.nn_associations[t.master_collection] = true
+  t.master.methods[t.assoc_create] = _nn_assoc_create(
+    t.master_collection, t.slave_collection
+  )
+  t.master.methods[t.assoc_remove] = _nn_assoc_remove(
+    t.master_collection, t.slave_collection
+  )
+  t.master.methods[t.assoc_check] = _nn_assoc_check(
+    t.master_collection
+  )
+  t.master.methods[t.master_collection] = _nn_assoc_get_collection(
+    t.slave, t.master_collection
+  )
+  t.slave.methods[t.slave_collection] = _nn_assoc_get_collection(
+    t.master, t.slave_collection
+  )
+end
+
+return {
+  new = m_new,
+  add_nn_assoc = add_nn_assoc,
+}
