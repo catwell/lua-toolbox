@@ -1,14 +1,7 @@
-import Widget from require "lapis.html"
-
-class Module extends Widget
+class Module extends require "views.base"
   content: =>
     h1 @module\get_name()
-    if @errors
-      div id: "errors", ->
-        for error in *@errors
-          p ->
-            em "ERROR"
-            text " " .. error
+    @render_errors()
     div id: "endorsers", ->
       h1 "Endorsers"
       ul ->

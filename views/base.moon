@@ -27,4 +27,12 @@ class Base extends Widget
               a href: @url_for("main.user", id: last.id), last\get_fullname()
               text "."
 
+  render_errors: () =>
+    if @errors
+      div id: "errors", ->
+        for error in *@errors
+          p ->
+            em "ERROR"
+            text " " .. error
+
 Base

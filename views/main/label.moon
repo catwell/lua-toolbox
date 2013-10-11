@@ -1,6 +1,4 @@
-import Widget from require "lapis.html"
-
-class Label extends Widget
+class Label extends require "views.base"
   content: =>
     h1 @label\get_name()
     div id: "modules", ->

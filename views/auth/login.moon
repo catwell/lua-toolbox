@@ -1,13 +1,6 @@
-import Widget from require "lapis.html"
-
-class Login extends Widget
+class Login extends require "views.base"
   content: =>
-    if @errors
-      div id: "errors", ->
-        for error in *@errors
-          p ->
-            em "ERROR"
-            text " " .. error
+    @render_errors()
     div id: "loginform", ->
       if @current_user
         p "Already logged in as " .. @current_user\get_fullname()

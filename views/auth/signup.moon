@@ -1,13 +1,6 @@
-import Widget from require "lapis.html"
-
-class Signup extends Widget
+class Signup extends require "views.base"
   content: =>
-    if @errors
-      div id: "errors", ->
-        for error in *@errors
-          p ->
-            em "ERROR"
-            text " " .. error
+    @render_errors()
     div id: "signupform", ->
       if @current_user
         p "Already logged in as " .. @current_user\get_fullname()
