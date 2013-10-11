@@ -11,6 +11,8 @@ local assert_valid = lapis_validate.assert_valid
 
 local fmt = string.format
 
+local cfg = require("lapis.config").get()
+
 local model = require "model"
 local User = model.User
 
@@ -48,8 +50,6 @@ app[{signup = "/signup"}] = respond_to {
     assert_valid(self.params, {
       {"email", is_email = true, max_length = 128},
       {"fullname", min_length = 2, max_length = 128},
-      {"password", min_length = 5, max_length = 128},
-      {"confirm", equals = self.params.password},
     })
     if User:resolve_email(self.params.email) then
       yield_error(fmt("user %s already exists", self.params.email))
@@ -57,19 +57,93 @@ app[{signup = "/signup"}] = respond_to {
     local u = User:create{
       email = self.params.email,
       fullname = self.params.fullname,
-      password = self.params.password,
     }
-    self.session.current_user_id = u.id
-    return {redirect_to = self:url_for("main.home")}
+    local tk = u:make_token()
+    if cfg._name == "development" then
+      return self:html(function()
+        p(fmt("DEV MODE. Token: %s", tk))
+      end)
+    else
+      -- TODO send email
+      return self:html(function()
+        p("Email sent, check your inbox!")
+      end)
+    end
   end),
 }
 
 app[{logout = "/logout"}] = respond_to {
   GET = function(self)
-    self.session.current_user_id = false -- should be nil
+    self.session.current_user_id = false -- TODO should be nil
     redir = self.params.redirect or "main.home"
     return {redirect_to = self:url_for(redir)}
   end,
+}
+
+app[{forgotpassword = "/forgot-password"}] = respond_to {
+  GET = function(self)
+    return {render = true}
+  end,
+  POST = capture_errors(function(self)
+    assert_valid(self.params, {
+      {"email", is_email = true, max_length = 128},
+    })
+    local u = User:get_by_email(self.params.email)
+    if not u then
+      yield_error(fmt("user %s not found", self.params.email))
+    end
+    local tk = u:make_token()
+    if cfg._name == "development" then
+      return self:html(function()
+        p(fmt("DEV MODE. Token: %s", tk))
+      end)
+    else
+      -- TODO send email
+      return self:html(function()
+        p("Email sent, check your inbox!")
+      end)
+    end
+  end),
+}
+
+app[{redeem = "/redeem/:tk"}] = respond_to {
+  GET = capture_errors(function(self)
+    if self.current_user then
+      yield_error("already logged in")
+    end
+    assert_valid(self.params, {
+      {"tk", min_length = 10, max_length = 10},
+    })
+    self.tk = self.params.tk
+    local u = User:resolve_token(self.tk)
+    if not u then
+      yield_error("invalid token")
+    end
+    self.user = u
+    return {render = true}
+  end),
+  POST = capture_errors(function(self)
+    if self.current_user then
+      yield_error("already logged in")
+    end
+    assert_valid(self.params, {
+      {"tk", min_length = 10, max_length = 10},
+    })
+    self.tk = self.params.tk
+    local u = User:resolve_token(self.tk)
+    if not u then
+      yield_error("invalid token")
+    end
+    self.user = u
+    assert_valid(self.params, {
+      {"password", min_length = 5, max_length = 128},
+      {"confirm", equals = self.params.password},
+    })
+    u:set_password(self.params.password)
+    u:invalidate_token()
+    self.session.current_user_id = u.id
+    return {redirect_to = self:url_for("main.home")}
+  end),
 }
 
 return lua.class(app, lapis.Application)

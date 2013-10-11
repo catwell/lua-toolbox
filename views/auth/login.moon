@@ -1,7 +1,7 @@
 class Login extends require "views.base"
   content: =>
     @render_errors()
-    div id: "loginform", ->
+    div ->
       if @current_user
         p "Already logged in as " .. @current_user\get_fullname()
         a href: @url_for("auth.logout") .. "?redirect=auth.login", "logout"
@@ -12,3 +12,4 @@ class Login extends require "views.base"
           label for: "password", "Password"
           input type: "password", id: "password", name: "password"
           input type: "submit", value: "login"
+          a href: @url_for("auth.forgotpassword"), "Forgot your password?"

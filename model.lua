@@ -73,7 +73,8 @@ redismodel.add_nn_assoc {
 
 User.methods.check_password = function(self, pwd)
   assert(type(pwd) == "string")
-  local hash = assert(self:getattr("pwhash"))
+  local hash = self:getattr("pwhash")
+  if not hash then return false end
   return bcrypt.verify(pwd, hash)
 end
 
@@ -86,6 +87,38 @@ User.methods.set_password = function(self, pwd)
   local salt = bcrypt.salt(10)
   local hash = assert(bcrypt.digest(pwd, salt))
   self:setattr("pwhash", hash)
+end
+
+User.methods.invalidate_token = function(self)
+  local tk = self:getattr("pwtoken")
+  if tk then
+    self.model.R:del(self.model:rk("_tk_" .. tk))
+    self:delattr("pwtoken")
+  end
+end
+
+local rand_id = function(n)
+  local r = {}
+  for i=1,n do r[i] = string.char(math.random(65,90)) end
+  return table.concat(r)
+end
+
+User.methods.make_token = function(self)
+  self:invalidate_token()
+  local tk = rand_id(10)
+  self:setattr("pwtoken", tk)
+  local duration = 3600 * 24 * 10 -- 10 days
+  self.model.R:setex(self.model:rk("_tk_" .. tk), duration, self.id)
+  return tk
+end
+
+User.m_methods.resolve_token = function(cls, tk)
+  assert(type(tk) == "string")
+  local id = tonumber(cls.R:get(cls:rk("_tk_" .. tk)))
+  if not id then return nil end
+  local u = cls:new(id)
+  assert(u:getattr("pwtoken") == tk)
+  return u
 end
 
 local _super = User.methods.export

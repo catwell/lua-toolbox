@@ -156,6 +156,11 @@ local setattr = function(self, attr, val)
   self.model.R:hset(self:rk(), attr, val)
 end
 
+local delattr = function(self, attr)
+  assert(type(attr) == "string")
+  self.model.R:hdel(self:rk(), attr)
+end
+
 local check_attributes = function(self, t)
   for k,_ in pairs(self.model.attributes) do
     if self["get_" .. k](self) ~= t[k] then
@@ -182,6 +187,7 @@ local base_methods = function()
     rk = rk,
     getattr = getattr,
     setattr = setattr,
+    delattr = delattr,
     check_attributes = check_attributes,
     export = export,
   }
