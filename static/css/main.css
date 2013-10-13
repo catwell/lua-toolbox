@@ -107,6 +107,16 @@ div#mainmenu nav a:focus::after {
   transform: translateY(0px);
 }
 
+/* Single cell */
+
+div.cell {
+  padding-top: 1ex;
+  padding-bottom: 1ex;
+  border-bottom: 1px solid #435a6b;
+  border-right: 1px solid #435a6b;
+  border-left: 1px solid #435a6b;
+}
+
 /* Modules list */
 
 .modules-list li {
@@ -135,7 +145,7 @@ h2.list-header {
   background-color: #0072c7;
 }
 
-.modules-list a {
+.module-endorsers a {
   text-decoration: none;
   color: black;
 }
@@ -143,6 +153,8 @@ h2.list-header {
 a.module-name {
   font-size: 1.4em;
   font-family: "Raleway", sans-serif;
+  text-decoration: none;
+  color: black;
 }
 
 a.module-name:visited { color: black; }

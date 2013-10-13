@@ -1,25 +1,11 @@
 class Module extends require "views.base"
   content: =>
-    h1 @module\get_name()
+    h2 class: "list-header", @module\get_name()
     @render_errors()
-    div id: "endorsers", ->
-      h1 "Endorsers"
-      ul ->
-        for u in *@module\endorsers()
-          li -> a href: @url_for("main.user", id: u.id), u\get_fullname()
-      if @current_user
-        form method: "POST", action: @url_for("main.module", id: @module.id), ->
-          if @current_user\endorses(@module)
-            input type: "submit", value: "de-endorse"
-            input type: "hidden", name: "action", value: "deendorse"
-          else
-            input type: "submit", value: "endorse"
-            input type: "hidden", name: "action", value: "endorse"
-    div id: "labels", ->
-      h1 "Labels"
-      ul ->
-        for l in *@module\labels()
-          li -> a href: @url_for("main.label", id: l.id), l\get_name()
+    div class: "cell", ->
+      @render_endorse_button(@module)
+      @render_endorsers(@module\endorsers())
+      @render_labels(@module\labels())
       if @current_user
         form method: "POST", action: @url_for("main.module", id: @module.id), ->
           input type: "text", name: "label"
