@@ -9,25 +9,33 @@ class Base extends Widget
         span class: "endorsed", "endorsed"
         span class: "hover", "deendorse"
 
-  render_generic: (list, get_name, prefix, route) =>
-    len = #list
-    if len > 0
-      last = list[len]
-      list[len] = nil
-      text prefix
-      for u in *list
-        a href: @url_for(route, id: u.id), u[get_name](u)
-        text ", "
-      a href: @url_for(route, id: last.id), last[get_name](last)
-      text "."
-
   render_endorsers: (endorsers) =>
     p class: "module-endorsers", ->
-      @render_generic(endorsers, "get_fullname", "Endorsed by: ", "main.user")
+      len = #endorsers
+      if len > 0
+        last = endorsers[len]
+        endorsers[len] = nil
+        text "Endorsed by: "
+        for u in *endorsers
+          a href: @url_for("main.user", id: u.id), u\get_fullname()
+          text ", "
+        a href: @url_for("main.user", id: last.id), last\get_fullname()
+        text "."
 
   render_labels: (labels) =>
-    p class: "module-labels", ->
-      @render_generic(labels, "get_name", "Labels: ", "main.label")
+    ul class: "labels-list", ->
+      for l in *labels
+        li ->
+          a href: @url_for("main.label", id: l.id), l\get_name()
+
+  render_endorsers_and_labels: (m) =>
+      endorsers = m\endorsers()
+      labels = m\labels()
+      if endorsers[1]
+        @render_endorsers(endorsers)
+      if labels[1]
+        text "Labels: "
+        @render_labels(labels)
 
   render_modules_list: (modules) =>
     ul class: "modules-list", ->
@@ -37,7 +45,7 @@ class Base extends Widget
           a class: "module-name", href: @url_for("main.module", id: m.id), m\get_name()
           --h3 class: "module-name", m\get_name()
           p class: "module-description", m\get_description()
-          @render_endorsers(m\endorsers())
+          @render_endorsers_and_labels(m)
 
   render_errors: () =>
     if @errors

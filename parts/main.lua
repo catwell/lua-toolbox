@@ -24,6 +24,7 @@ local app = {
 app[{home = "/"}] = respond_to {
   GET = function(self)
     self.modules = Module:all()
+    self.labels = Label:all()
     return {render = true}
   end,
 }

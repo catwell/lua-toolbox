@@ -4,9 +4,9 @@ class Module extends require "views.base"
     @render_errors()
     div class: "cell", ->
       @render_endorse_button(@module)
-      @render_endorsers(@module\endorsers())
-      @render_labels(@module\labels())
-      if @current_user
+      p class: "module-description", @module\get_description()
+      @render_endorsers_and_labels(@module)
+      if @current_user and (@current_user\get_trust_level() > 1)
         form method: "POST", action: @url_for("main.module", id: @module.id), ->
           input type: "text", name: "label"
           input type: "submit", value: "add label"

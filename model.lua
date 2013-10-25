@@ -27,6 +27,7 @@ User:add_attribute("email")
 User:add_index("email")
 User:add_attribute("fullname")
 User:add_attribute("password")
+User:add_attribute("trust_level")
 
 local Module = redismodel.new{
   redis = R,
@@ -87,6 +88,10 @@ User.methods.set_password = function(self, pwd)
   local salt = bcrypt.salt(10)
   local hash = assert(bcrypt.digest(pwd, salt))
   self:setattr("pwhash", hash)
+end
+
+User.methods.get_trust_level = function(self)
+  return tonumber(self:getattr("trust_level")) or 0
 end
 
 User.methods.invalidate_token = function(self)
@@ -180,6 +185,7 @@ local init = function()
         email = "johndoe@example.com",
         fullname = "John Doe",
         password = "tagazok",
+        trust_level = 2,
       }
     end
   end
