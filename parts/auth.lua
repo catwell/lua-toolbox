@@ -16,6 +16,8 @@ local cfg = require("lapis.config").get()
 local model = require "model"
 local User = model.User
 
+local mailer = require "mailer"
+
 local app = {
   path = "",
   name = "auth.",
@@ -64,7 +66,10 @@ app[{signup = "/signup"}] = respond_to {
         p(fmt("DEV MODE. Token: %s", tk))
       end)
     else
-      -- TODO send email
+      mailer.send_signup(
+        u,
+        self:build_url(self:url_for("auth.redeem", {tk = tk}))
+      )
       return self:html(function()
         p("Email sent, check your inbox!")
       end)
@@ -98,7 +103,10 @@ app[{forgotpassword = "/forgot-password"}] = respond_to {
         p(fmt("DEV MODE. Token: %s", tk))
       end)
     else
-      -- TODO send email
+      mailer.send_resetpw(
+        u,
+        self:build_url(self:url_for("auth.redeem", {tk = tk}))
+      )
       return self:html(function()
         p("Email sent, check your inbox!")
       end)

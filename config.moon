@@ -10,9 +10,10 @@ config "development", ->
   num_workers 1
   secret "dev-secret"
   lua_code_cache "off"
-  redis ->
-    host "127.0.0.1"
-    port 6379
+  redis {
+    host: "127.0.0.1",
+    port: 6379,
+  }
 
 config "production", ->
   appname _appname
@@ -21,6 +22,12 @@ config "production", ->
   num_workers 4
   secret assert os.getenv "LAPIS_SECRET"
   lua_code_cache "on"
-  redis ->
-    host "127.0.0.1"
-    port 6379
+  redis {
+    host: "127.0.0.1",
+    port: 6379,
+  }
+  smtp {
+    server: os.getenv "SMTP_SERVER",
+    user: os.getenv "SMTP_USER",
+    password: os.getenv "SMTP_PASSWORD",
+  }
