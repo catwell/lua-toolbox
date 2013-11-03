@@ -13,7 +13,7 @@ lr_path.configure_paths = function(rockspec) end
 local cfg = require("lapis.config").get()
 local pfx = cfg.appname
 
-local R = redis.connect(cfg.redis.host, cfg.redis.port)
+local R = redis.connect(unpack(cfg.redis))
 
 --- declarations
 
