@@ -217,7 +217,7 @@ ul.labels-list { display: inline; }
 
 .labels-list li {
   list-style-type: none;
-  display: inline;
+  display: inline-block;
   padding-right: 0.2ex;
   padding-left: 0.2ex;
   padding-top: 0.2ex;
