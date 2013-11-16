@@ -182,6 +182,10 @@ local export = function(self)
   return r
 end
 
+local exists = function(self)
+  return self.model:exists(self.id)
+end
+
 local base_methods = function()
   return {
     rk = rk,
@@ -190,6 +194,7 @@ local base_methods = function()
     delattr = delattr,
     check_attributes = check_attributes,
     export = export,
+    exists = exists,
   }
 end
 
