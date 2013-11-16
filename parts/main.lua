@@ -23,8 +23,8 @@ local app = {
 
 app[{home = "/"}] = respond_to {
   GET = function(self)
-    self.modules = Module:all()
-    self.labels = Label:all()
+    self.modules = Module:all(Module.sort_by_nb_endorsers)
+    self.labels = Label:all("get_name")
     self.title = "Lua Toolbox"
     return {render = true}
   end,

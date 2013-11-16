@@ -85,18 +85,37 @@ local next_id = function(cls)
   return cls.R:incr(cls:rk("_next_id"))
 end
 
-local all_with_ids = function(cls, ids)
+local all_with_ids = function(cls, ids, sort)
   assert(type(ids) == "table")
   local r = {}
-  for i=1,#ids do
-    r[i] = cls:new(ids[i])
+  for i=1,#ids do r[i] = cls:new(ids[i]) end
+  if not sort then return r end
+  if type(sort) == "string" then
+    local _getprop = sort
+    sort = {
+      function(self) return self[_getprop](self) end,
+      function(a, b) return a < b end,
+    }
   end
+  assert(type(sort) == "table")
+  local getprop = sort[1]
+  if type(getprop) == "string" then
+    getprop = function(self) return self[getprop](self) end
+  end
+  assert(type(getprop) == "function")
+  local cmp = sort[2] or function(a, b) return a < b end
+  assert(type(cmp) == "function")
+  local t = {}
+  for i=1,#r do t[i] = {getprop(r[i]), r[i]} end
+  local _cmp = function(a, b) return cmp(a[1], b[1]) end
+  table.sort(t, _cmp)
+  for i=1,#t do r[i] = t[i][2] end
   return r
 end
 
-local all = function(cls)
+local all = function(cls, sort)
   local ids = cls.R:smembers(cls:rk("_all"))
-  return cls:all_with_ids(ids)
+  return cls:all_with_ids(ids, sort)
 end
 
 local exists = function(cls, id)
@@ -130,6 +149,7 @@ base_m_methods = function()
     add_index = add_index,
     new = new,
     next_id = next_id,
+    sort_by_attr = sort_by_attr,
     all_with_ids = all_with_ids,
     all = all,
     exists = exists,
@@ -254,9 +274,15 @@ local _nn_assoc_check = function(master_collection)
 end
 
 local _nn_assoc_get_collection = function(cls, collection)
-  return function(self)
+  return function(self, sort)
     local ids = self.model.R:smembers(self:rk(collection))
-    return cls:all_with_ids(ids)
+    return cls:all_with_ids(ids, sort)
+  end
+end
+
+local _nn_assoc_count_collection = function(cls, collection)
+  return function(self)
+    return self.model.R:scard(self:rk(collection))
   end
 end
 
@@ -285,6 +311,12 @@ local add_nn_assoc = function(t)
     t.slave, t.master_collection
   )
   t.slave.methods[t.slave_collection] = _nn_assoc_get_collection(
+    t.master, t.slave_collection
+  )
+  t.master.methods["nb_" .. t.master_collection] = _nn_assoc_count_collection(
+    t.slave, t.master_collection
+  )
+  t.slave.methods["nb_" .. t.slave_collection] = _nn_assoc_count_collection(
     t.master, t.slave_collection
   )
 end

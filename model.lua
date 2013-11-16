@@ -176,6 +176,11 @@ Module.methods.update_with_rockspec = function(self, rs)
   return true
 end
 
+Module.sort_by_nb_endorsers = {
+  function(self) return {self:nb_endorsers(), self:get_name()} end,
+  function(a, b) return (a[1] == b[1]) and (a[2] < b[2]) or (a[1] > b[1]) end,
+}
+
 --- others
 
 local init = function()

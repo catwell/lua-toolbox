@@ -5,4 +5,4 @@ class User extends require "views.base"
         h2 class: "list-header", "Your endorsements"
       else
         h2 class: "list-header", "#{@user\get_fullname()}'s endorsements"
-      @render_modules_list(@user\endorsements())
+      @render_modules_list(@user\endorsements("get_name"))
