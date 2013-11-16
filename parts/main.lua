@@ -25,6 +25,7 @@ app[{home = "/"}] = respond_to {
   GET = function(self)
     self.modules = Module:all()
     self.labels = Label:all()
+    self.title = "Lua Toolbox"
     return {render = true}
   end,
 }
@@ -32,6 +33,7 @@ app[{home = "/"}] = respond_to {
 app[{["module"] = "/module/:id"}] = respond_to {
   GET = function(self)
     self.module = Module:new(self.params.id)
+    self.title = fmt("Lua Toolbox - %s", self.module:get_name())
     return {render = true}
   end,
   POST = capture_errors(function(self)
@@ -65,6 +67,10 @@ app[{["module"] = "/module/:id"}] = respond_to {
 app[{["label"] = "/label/:id"}] = respond_to {
   GET = function(self)
     self.label = Label:new(self.params.id)
+    self.title = fmt(
+      "Lua Toolbox - modules labelled %s",
+      self.label:get_name()
+    )
     return {render = true}
   end,
 }
@@ -72,6 +78,7 @@ app[{["label"] = "/label/:id"}] = respond_to {
 app[{user = "/user/:id"}] = respond_to {
   GET = function(self)
     self.user = User:new(self.params.id)
+    self.title = fmt("Lua Toolbox - %s", self.user:get_fullname())
     return {render = true}
   end,
 }
