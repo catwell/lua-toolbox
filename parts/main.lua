@@ -73,6 +73,7 @@ app[{["label"] = "/label/:id"}] = respond_to {
     if not self.label:exists() then
       return self.app.handle_404(self)
     end
+    self.modules = self.label:modules(Module.sort_by_nb_endorsers)
     self.title = fmt(
       "Lua Toolbox - modules labelled %s",
       self.label:get_name()
