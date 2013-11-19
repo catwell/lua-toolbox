@@ -17,11 +17,11 @@ config "production", ->
   session_name _session_name
   port 80
   num_workers 4
-  secret assert os.getenv "LAPIS_SECRET"
+  secret "-changeme-NotSoSecret-"
   lua_code_cache "on"
   redis {"127.0.0.1", 6379}
   smtp {
-    server: os.getenv "SMTP_SERVER",
-    user: os.getenv "SMTP_USER",
-    password: os.getenv "SMTP_PASSWORD",
+    server: "changeme.example.com",
+    user: "changeme.user",
+    password: "changeme.password",
   }

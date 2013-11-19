@@ -6,7 +6,7 @@ Inspired by [The Ruby Toolbox](https://www.ruby-toolbox.com/).
 
 ## Usage
 
-Start with:
+Edit config.moon, then start with:
 
     make dev
 
