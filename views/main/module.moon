@@ -5,6 +5,8 @@ class Module extends require "views.base"
     div class: "cell", ->
       @render_endorse_button(@module)
       p class: "module-description", @module\get_description()
+      url = @module\get_url()
+      p a href: url, url
       @render_endorsers_and_labels(@module)
       if @current_user and (@current_user\get_trust_level() > 1)
         form method: "POST", action: @url_for("main.module", id: @module.id), ->
