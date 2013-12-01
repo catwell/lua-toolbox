@@ -9,18 +9,49 @@ class Base extends Widget
         span class: "endorsed", "endorsed"
         span class: "hover", "deendorse"
 
+  render_users_txtlist: (users, prefix) =>
+    len = #users
+    if len > 0
+      last = users[len]
+      users[len] = nil
+      text prefix
+      for u in *users
+        a href: @url_for("main.user", id: u.id), u\get_fullname()
+        text ", "
+      a href: @url_for("main.user", id: last.id), last\get_fullname()
+      text "."
+
   render_endorsers: (endorsers) =>
     p class: "module-endorsers", ->
-      len = #endorsers
-      if len > 0
-        last = endorsers[len]
-        endorsers[len] = nil
-        text "Endorsed by: "
-        for u in *endorsers
-          a href: @url_for("main.user", id: u.id), u\get_fullname()
-          text ", "
-        a href: @url_for("main.user", id: last.id), last\get_fullname()
-        text "."
+      @render_users_txtlist(endorsers, "Endorsed by: ")
+
+  render_modules_txtlist: (deps, prefix) =>
+    len = #deps
+    if len > 0
+      last = deps[len]
+      deps[len] = nil
+      text prefix
+      for u in *deps
+        a href: @url_for("main.module", id: u.id), u\get_name()
+        text ", "
+      a href: @url_for("main.module", id: last.id), last\get_name()
+      text "."
+
+  render_dependencies: (deps) =>
+    p class: "module-dependencies", ->
+      @render_modules_txtlist(deps, "Depends on: ")
+
+  render_reverse_dependencies: (deps) =>
+    p class: "module-reverse-dependencies", ->
+      @render_modules_txtlist(deps, "Depended on by: ")
+
+  render_all_dependencies: (m) =>
+    deps = m\dependencies()
+    rev_deps = m\reverse_dependencies()
+    if deps[1]
+      @render_dependencies(deps)
+    if rev_deps[1]
+      @render_reverse_dependencies(rev_deps)
 
   render_labels: (labels) =>
     ul class: "labels-list", ->
@@ -43,7 +74,6 @@ class Base extends Widget
         li ->
           @render_endorse_button(m)
           a class: "module-name", href: @url_for("main.module", id: m.id), m\get_name()
-          --h3 class: "module-name", m\get_name()
           p class: "module-description", m\get_description()
           @render_endorsers_and_labels(m)
 

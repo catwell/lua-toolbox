@@ -70,6 +70,16 @@ redismodel.add_nn_assoc {
   slave_collection = "modules",
 }
 
+redismodel.add_nn_assoc {
+  master = Module,
+  slave = Module,
+  assoc_create = "add_dependency",
+  assoc_remove = "remove_dependency",
+  assoc_check = "depends_on",
+  master_collection = "dependencies",
+  slave_collection = "reverse_dependencies",
+}
+
 --- User
 
 User.methods.check_password = function(self, pwd)
@@ -155,15 +165,16 @@ Module.m_methods.create = function(cls, t)
   _super(cls, t)
 end
 
-Module.methods.update_with_rockspec = function(self, rs)
+Module.methods.update_with_rockspec = function(self, rs, fast)
   -- -> changed?
+  fast = (fast ~= false)
   rs = load_rockspec(rs)
   assert(rs and rs.name and rs.version)
   assert(rs.name == self:get_name())
   local old_version = self:get_version()
   if old_version then
     if old_version == rs.version then
-      if self:check_attributes(rs) then
+      if fast and self:check_attributes(rs) then
         return false
       end
     elseif lr_deps.compare_versions(old_version, rs.version) then
@@ -172,6 +183,15 @@ Module.methods.update_with_rockspec = function(self, rs)
   end
   for k,_ in pairs(self.model.attributes) do
     if rs[k] then self["set_" .. k](self, rs[k]) end
+  end
+  local old_deps = self:dependencies()
+  for i=1,#old_deps do
+    self:remove_dependency(old_deps[i])
+  end
+  local new_deps = rs.dependencies or {}
+  for i=1,#new_deps do
+    local m = Module:get_by_name(new_deps[i].name)
+    if m then self:add_dependency(m) end
   end
   return true
 end
