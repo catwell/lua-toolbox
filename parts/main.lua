@@ -95,6 +95,11 @@ app[{user = "/user/:id"}] = respond_to {
     if not self.user:exists() then
       return self.app.handle_404(self)
     end
+    self.endorsements = self.user:endorsements({
+      sort = "get_name",
+      prefetch_attrs = {"name", "description"},
+      prefetch_colls = {"labels", "endorsers"},
+    })
     self.title = fmt("Lua Toolbox - %s", self.user:get_fullname())
     return {render = true}
   end,

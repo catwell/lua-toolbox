@@ -170,7 +170,6 @@ local all_with_ids = function(cls, ids, params)
         end
       end
     end
-
     for k=1,#prefetch_colls do
       coll = prefetch_colls[k]
       ks = {}
@@ -184,7 +183,6 @@ local all_with_ids = function(cls, ids, params)
         end
       end
     end
-
   end
   if not sort then return r end
   if type(sort) == "string" then
