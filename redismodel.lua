@@ -103,7 +103,7 @@ local _mhget_scripting = function(R, field, ks)
   local n = #ks
   ks[n+1] = field
   local r = R:eval(mhget_script, n, unpack(ks))
-  ks[n] = nil
+  ks[n+1] = nil
   return r
 end
 
