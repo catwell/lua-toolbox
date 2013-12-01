@@ -23,8 +23,15 @@ local app = {
 
 app[{home = "/"}] = respond_to {
   GET = function(self)
-    self.modules = Module:all(Module.sort_by_nb_endorsers)
-    self.labels = Label:all("get_name")
+    self.modules = Module:all({
+      sort = Module.sort_by_nb_endorsers,
+      prefetch_attrs = {"name", "description"},
+      prefetch_colls = {"labels", "endorsers"},
+    })
+    self.labels = Label:all({
+      sort = "get_name",
+      prefetch_attrs = {"name"},
+    })
     self.title = "Lua Toolbox"
     return {render = true}
   end,
@@ -73,7 +80,7 @@ app[{["label"] = "/label/:id"}] = respond_to {
     if not self.label:exists() then
       return self.app.handle_404(self)
     end
-    self.modules = self.label:modules(Module.sort_by_nb_endorsers)
+    self.modules = self.label:modules({sort = Module.sort_by_nb_endorsers})
     self.title = fmt(
       "Lua Toolbox - modules labelled %s",
       self.label:get_name()

@@ -61,7 +61,7 @@ class Base extends Widget
 
   render_endorsers_and_labels: (m) =>
       endorsers = m\endorsers()
-      labels = m\labels("get_name")
+      labels = m\labels(sort: "get_name")
       if endorsers[1]
         @render_endorsers(endorsers)
       if labels[1]

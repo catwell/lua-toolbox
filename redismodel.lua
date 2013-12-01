@@ -74,21 +74,118 @@ end
 
 local new = function(cls, id)
   id = assert(tonumber(id))
-  local r = {
-    id = id,
-    model = cls,
-  }
-  return setmetatable(r, {__index=cls.methods})
+  if not cls.obj_cache[id] then
+    local r = {
+      id = id,
+      model = cls,
+      attr_cache = {},
+      coll_cache = {},
+    }
+    cls.obj_cache[id] = setmetatable(r, {__index=cls.methods})
+  end
+  return cls.obj_cache[id]
 end
 
 local next_id = function(cls)
   return cls.R:incr(cls:rk("_next_id"))
 end
 
-local all_with_ids = function(cls, ids, sort)
+local mhget_script = [[
+  local r = {}
+  local field = ARGV[1]
+  for i=1,#KEYS do
+    r[i] = redis.call("hget", KEYS[i], field)
+  end
+  return r
+]]
+
+local _mhget_scripting = function(R, field, ks)
+  local n = #ks
+  ks[n+1] = field
+  local r = R:eval(mhget_script, n, unpack(ks))
+  ks[n] = nil
+  return r
+end
+
+local _mhget_base = function(R, field, ks)
+  local r = {}
+  for i=1,#ks do
+    r[i] = R:hget(ks[i], field)
+  end
+  return r
+end
+
+local mhget = function(R, field, ks)
+  return _mhget_scripting(R, field, ks)
+end
+
+local msmembers_script = [[
+  local r = {}
+  for i=1,#KEYS do
+    r[i] = redis.call("smembers", KEYS[i])
+  end
+  return r
+]]
+
+local _msmembers_scripting = function(R, ks)
+  local r = R:eval(msmembers_script, #ks, unpack(ks))
+  return r
+end
+
+local _msmembers_base = function(R, ks)
+  local r = {}
+  for i=1,#ks do
+    r[i] = R:smembers(ks[i])
+  end
+  return r
+end
+
+local msmembers = function(R, ks)
+  return _msmembers_scripting(R, ks)
+end
+
+local all_with_ids = function(cls, ids, params)
   assert(type(ids) == "table")
+  params = params or {}
+  assert(type(params) == "table")
+  local sort = params.sort
+  local prefetch_attrs = params.prefetch_attrs or {}
+  local prefetch_colls = params.prefetch_colls or {}
   local r = {}
   for i=1,#ids do r[i] = cls:new(ids[i]) end
+  local s, n = #r, 500
+  local ks, vs, attr, last
+  for i=1,#r,n do
+    ks = {}
+    last = math.min(i+n-1,s)
+    for j=i,last do
+      ks[j-i+1] = r[j]:rk()
+    end
+    for k=1,#prefetch_attrs do
+      attr = prefetch_attrs[k]
+      vs = mhget(cls.R, attr, ks)
+      for j=i,last do
+        if vs[j-i+1] then
+          r[j]:cache_setattr(attr, vs[j-i+1])
+        end
+      end
+    end
+
+    for k=1,#prefetch_colls do
+      coll = prefetch_colls[k]
+      ks = {}
+      for j=i,last do
+        ks[j-i+1] = r[j]:rk(coll)
+      end
+      vs = msmembers(cls.R, ks)
+      for j=i,last do
+        if vs[j-i+1] then
+          r[j]:cache_setcoll(coll, vs[j-i+1])
+        end
+      end
+    end
+
+  end
   if not sort then return r end
   if type(sort) == "string" then
     local _getprop = sort
@@ -113,9 +210,9 @@ local all_with_ids = function(cls, ids, sort)
   return r
 end
 
-local all = function(cls, sort)
+local all = function(cls, params)
   local ids = cls.R:smembers(cls:rk("_all"))
-  return cls:all_with_ids(ids, sort)
+  return cls:all_with_ids(ids, params)
 end
 
 local exists = function(cls, id)
@@ -164,20 +261,35 @@ end
 
 local getattr = function(self, attr)
   assert(type(attr) == "string")
-  return self.model.R:hget(self:rk(), attr)
+  if not self.attr_cache[attr] then
+    self.attr_cache[attr] = {self.model.R:hget(self:rk(), attr)}
+  end
+  return self.attr_cache[attr][1]
 end
 
-local setattr = function(self, attr, val)
+local cache_setattr = function(self, attr, val)
   assert(type(attr) == "string")
   assert(
     (type(val) == "string") or
     (type(val) == "number")
   )
+  self.attr_cache[attr] = {val}
+end
+
+local cache_setcoll = function(self, coll, val)
+  assert(type(coll) == "string")
+  assert(type(val) == "table")
+  self.coll_cache[coll] = {val}
+end
+
+local setattr = function(self, attr, val)
+  cache_setattr(self, attr, val)
   self.model.R:hset(self:rk(), attr, val)
 end
 
 local delattr = function(self, attr)
   assert(type(attr) == "string")
+  self.attr_cache[attr] = {}
   self.model.R:hdel(self:rk(), attr)
 end
 
@@ -212,6 +324,8 @@ local base_methods = function()
     getattr = getattr,
     setattr = setattr,
     delattr = delattr,
+    cache_setattr = cache_setattr,
+    cache_setcoll = cache_setcoll,
     check_attributes = check_attributes,
     export = export,
     exists = exists,
@@ -233,6 +347,7 @@ local m_new = function(t)
     nn_associations = {},
     methods = base_methods(),
     m_methods = base_m_methods(),
+    obj_cache = {},
   }
   r = setmetatable(r, {__index=r.m_methods})
   return r
@@ -245,6 +360,8 @@ local _nn_assoc_create = function(master_collection, slave_collection)
       (type(m) == "table")
       and tonumber(m.id)
     )
+    self.coll_cache[master_collection] = nil
+    m.coll_cache[slave_collection] = nil
     R:sadd(self:rk(master_collection), m.id)
     R:sadd(m:rk(slave_collection), self.id)
   end
@@ -257,6 +374,8 @@ local _nn_assoc_remove = function(master_collection, slave_collection)
       (type(m) == "table")
       and tonumber(m.id)
     )
+    self.coll_cache[master_collection] = nil
+    m.coll_cache[slave_collection] = nil
     R:srem(self:rk(master_collection), m.id)
     R:srem(m:rk(slave_collection), self.id)
   end
@@ -274,14 +393,22 @@ local _nn_assoc_check = function(master_collection)
 end
 
 local _nn_assoc_get_collection = function(cls, collection)
-  return function(self, sort)
-    local ids = self.model.R:smembers(self:rk(collection))
-    return cls:all_with_ids(ids, sort)
+  return function(self, params)
+    if not self.coll_cache[collection] then
+      self.coll_cache[collection] = {
+        self.model.R:smembers(self:rk(collection))
+      }
+    end
+    local ids = self.coll_cache[collection][1]
+    return cls:all_with_ids(ids, params)
   end
 end
 
 local _nn_assoc_count_collection = function(cls, collection)
   return function(self)
+    if self.coll_cache[collection] then
+      return #self.coll_cache[collection][1]
+    end
     return self.model.R:scard(self:rk(collection))
   end
 end
