@@ -15,7 +15,12 @@ local pfx = cfg.appname
 
 local init_redis, R
 if ngx and cfg.use_resty_redis then
+  -- hack to make resty-redis return nil
+  -- instead of ngx.null, like redis-lua
+  local null = ngx.null
+  ngx.null = nil
   local redis = require "resty.redis"
+  ngx.null = null
   R = redis:new()
   R:set_timeout(1000)
   init_redis = function() assert(R:connect(unpack(cfg.redis))) end
