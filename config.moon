@@ -10,6 +10,7 @@ config "development", ->
   num_workers 1
   secret "dev-secret"
   lua_code_cache "off"
+  use_resty_redis true
   redis {"127.0.0.1", 6379}
 
 config "production", ->
@@ -19,6 +20,7 @@ config "production", ->
   num_workers 4
   secret "-changeme-NotSoSecret-"
   lua_code_cache "on"
+  use_resty_redis true
   redis {"127.0.0.1", 6379}
   smtp {
     server: "changeme.example.com",

@@ -13,7 +13,17 @@ lr_path.configure_paths = function(rockspec) end
 local cfg = require("lapis.config").get()
 local pfx = cfg.appname
 
-local R = redis.connect(unpack(cfg.redis))
+local init_redis, R
+if ngx and cfg.use_resty_redis then
+  local redis = require "resty.redis"
+  R = redis:new()
+  R:set_timeout(1000)
+  init_redis = function() assert(R:connect(unpack(cfg.redis))) end
+else
+  local redis = require "redis"
+  R = redis.connect(unpack(cfg.redis))
+  init_redis = function() end
+end
 
 --- declarations
 
@@ -204,6 +214,7 @@ Module.sort_by_nb_endorsers = {
 --- others
 
 local init = function()
+  init_redis()
   if cfg._name == "development" then
     if not User:resolve_email("johndoe@example.com") then
       User:create{
