@@ -1,6 +1,8 @@
 class Module extends require "views.base"
   content: =>
-    h2 class: "list-header", @module\get_name()
+    h2 class: "list-header", ->
+      text @module\get_name()
+      text " (" .. @module\get_version() .. ")"
     @render_errors()
     div class: "cell", ->
       @render_endorse_button(@module)
