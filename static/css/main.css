@@ -213,6 +213,9 @@ button.module-endorse.endorsed:hover .hover { display: inline; }
 
 /* Labels list */
 
+div.labels-container { margin-bottom: 1em; }
+.modules-list li div.labels-container { margin: 0; }
+
 ul.labels-list { display: inline; }
 
 .labels-list li {

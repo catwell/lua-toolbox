@@ -25,6 +25,11 @@ class Base extends Widget
     p class: "module-endorsers", ->
       @render_users_txtlist(endorsers, "Endorsed by: ")
 
+  render_module_link: (m) =>
+    url = @module\get_url()
+    if url
+      p -> a href: url, url
+
   render_modules_txtlist: (deps, prefix) =>
     len = #deps
     if len > 0
@@ -65,8 +70,9 @@ class Base extends Widget
       if endorsers[1]
         @render_endorsers(endorsers)
       if labels[1]
-        text "Labels: "
-        @render_labels(labels)
+        div class: "labels-container", ->
+          text "Labels: "
+          @render_labels(labels)
 
   render_modules_list: (modules) =>
     ul class: "modules-list", ->
