@@ -1,3 +1,4 @@
+require "fixpath"
 local lua = require "lapis.lua"
 local lapis = require "lapis.init"
 require "extensions"
