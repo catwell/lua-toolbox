@@ -42,6 +42,10 @@ local _indexed_getter = function(attr)
   end
 end
 
+local toboolean = function(x) -- for resty-redis
+  return x and x ~= 0
+end
+
 local rk = function(cls, ...)
   return table.concat({cls.prefix, cls.name, ...}, ":")
 end
@@ -215,7 +219,7 @@ end
 
 local exists = function(cls, id)
   assert(type(id) == "number")
-  return cls.R:sismember(cls:rk("_all"), id)
+  return toboolean(cls.R:sismember(cls:rk("_all"), id))
 end
 
 local create = function(cls, t)
@@ -386,7 +390,7 @@ local _nn_assoc_check = function(master_collection)
       (type(m) == "table")
       and tonumber(m.id)
     )
-    return R:sismember(self:rk(master_collection), m.id)
+    return toboolean(R:sismember(self:rk(master_collection), m.id))
   end
 end
 
