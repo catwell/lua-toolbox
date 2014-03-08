@@ -128,6 +128,16 @@ app[{["about"] = "/about"}] = respond_to {
       r.values[i+1] = counts[i] or 0
     end
     self.endorsement_data = r
+    if cfg._name == "development" then
+      self.chartspree_root = "http://api.chartspree.com"
+    else
+      -- need local HTTP proxy to work around lack of HTTPS on chartspree
+      -- nginx config:
+      -- location /bar.svg {
+      --   proxy_pass http://api.chartspree.com;
+      -- }
+      self.chartspree_root = ""
+    end
     return {render = true}
   end,
 }

@@ -19,13 +19,13 @@ class About extends require "views.base"
             a href:  "http://catwell.info", "Pierre Chapuis"
             text "."
 
-    -- h2 class: "list-header", "Metrics"
-    -- div class: "cell", ->
-    --     h3 "Endorsements per module"
-    --     object type: "image/svg+xml", data: table.concat {
-    --         "http://api.chartspree.com/bar.svg",
-    --         "?series=#{table.concat(@endorsement_data.values, ",")}",
-    --         "&_labels=#{table.concat(@endorsement_data.labels, ",")}",
-    --         "&_show_legend=false",
-    --         "&_height=300px",
-    --     }
+    h2 class: "list-header", "Metrics"
+    div class: "cell", ->
+        h3 "Endorsements per module"
+        object type: "image/svg+xml", data: table.concat {
+            "#{@chartspree_root}/bar.svg",
+            "?series=#{table.concat(@endorsement_data.values, ",")}",
+            "&_labels=#{table.concat(@endorsement_data.labels, ",")}",
+            "&_show_legend=false",
+            "&_height=300px",
+        }
