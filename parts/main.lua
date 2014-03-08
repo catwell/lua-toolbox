@@ -109,4 +109,27 @@ app[{user = "/user/:id"}] = respond_to {
   end,
 }
 
+app[{["about"] = "/about"}] = respond_to {
+  GET = function(self)
+    self.title = "About Lua Toolbox"
+    local modules = Module:all({
+      prefetch_colls = {"endorsers"},
+    })
+    local counts, max = {}, 0
+    local n
+    for i=1,#modules do
+      n = modules[i]:nb_endorsers()
+      counts[n] = (counts[n] or 0) + 1
+      if max < n then max = n end
+    end
+    local r = {labels={}, values={}}
+    for i=0,max do
+      r.labels[i+1] = i
+      r.values[i+1] = counts[i] or 0
+    end
+    self.endorsement_data = r
+    return {render = true}
+  end,
+}
+
 return lua.class(app, lapis.Application)

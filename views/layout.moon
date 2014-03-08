@@ -14,6 +14,8 @@ class MainLayout extends Widget
             nav class: "left", ->
               a href: @url_for("main.home"), "Lua Toolbox"
             nav class: "right", ->
+              a href: @url_for("main.about"), "about"
+              span " | "
               if @current_user
                 a href: @url_for("main.user", id: @current_user.id), @current_user\get_fullname()
                 span " | "

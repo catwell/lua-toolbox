@@ -110,8 +110,7 @@ div#mainmenu nav a:focus::after {
 /* Single cell */
 
 div.cell {
-  padding-top: 1ex;
-  padding-bottom: 1ex;
+  padding: 1ex;
   border-bottom: 1px solid #435a6b;
   border-right: 1px solid #435a6b;
   border-left: 1px solid #435a6b;
@@ -159,7 +158,7 @@ a.module-name {
 
 a.module-name:visited { color: black; }
 
-h3.module-name {
+h3 {
   font-size: 1.4em;
   font-family: "Raleway", sans-serif;
   font-weight: normal;
