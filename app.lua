@@ -1,3 +1,5 @@
+local fmt = string.format
+
 local lua = require "lapis.lua"
 local lapis = require "lapis.init"
 local model = require "model"
