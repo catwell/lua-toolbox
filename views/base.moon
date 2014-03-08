@@ -2,6 +2,11 @@ import Widget from require "lapis.html"
 
 class Base extends Widget
 
+  shuffled: (t) =>
+    order = [{rnd: math.random(), idx: i} for i in ipairs t]
+    table.sort(order, (a,b) -> a.rnd < b.rnd)
+    [t[x.idx] for x in *order]
+
   render_endorse_button: (m) =>
     if @current_user
       button class: "module-endorse #{@current_user\endorses(m) and "endorsed" or ""}", ["data-module-id"]: m.id, ->
@@ -9,21 +14,28 @@ class Base extends Widget
         span class: "endorsed", "endorsed"
         span class: "hover", "deendorse"
 
-  render_users_txtlist: (users, prefix) =>
+  render_users_txtlist: (users, prefix, max) =>
     len = #users
+    max = max or len
     if len > 0
       last = users[len]
       users[len] = nil
       text prefix
+      n = 0
       for u in *users
         a href: @url_for("main.user", id: u.id), u\get_fullname()
         text ", "
+        n += 1
+        if n >= max - 1
+          break
       a href: @url_for("main.user", id: last.id), last\get_fullname()
+      if len - n - 1 > 0
+        text " and #{len - n - 1} other#{len - n - 1 > 1 and "s" or ""}"
       text "."
 
-  render_endorsers: (endorsers) =>
+  render_endorsers: (endorsers, max_endorsers) =>
     p class: "module-endorsers", ->
-      @render_users_txtlist(endorsers, "Endorsed by: ")
+      @render_users_txtlist(@shuffled(endorsers), "Endorsed by: ", max_endorsers)
 
   render_module_link: (m) =>
     url = @module\get_url()
@@ -64,11 +76,11 @@ class Base extends Widget
         li ->
           a href: @url_for("main.label", id: l.id), l\get_name()
 
-  render_endorsers_and_labels: (m) =>
+  render_endorsers_and_labels: (m, max_endorsers) =>
       endorsers = m\endorsers()
       labels = m\labels(sort: "get_name")
       if endorsers[1]
-        @render_endorsers(endorsers)
+        @render_endorsers(endorsers, max_endorsers)
       if labels[1]
         div class: "labels-container", ->
           text "Labels: "
@@ -81,7 +93,7 @@ class Base extends Widget
           @render_endorse_button(m)
           a class: "module-name", href: @url_for("main.module", id: m.id), m\get_name()
           p class: "module-description", m\get_description()
-          @render_endorsers_and_labels(m)
+          @render_endorsers_and_labels(m, 3)
 
   render_errors: () =>
     if @errors
