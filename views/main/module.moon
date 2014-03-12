@@ -15,3 +15,5 @@ class Module extends require "views.base"
           input type: "text", name: "label"
           input type: "submit", value: "add label"
           input type: "hidden", name: "action", value: "label"
+        div style: "text-align: right;", ->
+          a href: @url_for("main.module", id: @module.id+1), "next"
