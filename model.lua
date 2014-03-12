@@ -3,6 +3,7 @@
 local redis = require "redis"
 local bcrypt = require "bcrypt"
 local redismodel = require "redismodel"
+local rand_id = (require "helpers").rand_id
 
 -- monkey-patch required to make rocks loading work
 local lr_fetch = require "luarocks.fetch"
@@ -125,12 +126,6 @@ User.methods.invalidate_token = function(self)
     self.model.R:del(self.model:rk("_tk_" .. tk))
     self:delattr("pwtoken")
   end
-end
-
-local rand_id = function(n)
-  local r = {}
-  for i=1,n do r[i] = string.char(math.random(65,90)) end
-  return table.concat(r)
 end
 
 User.methods.make_token = function(self)
