@@ -177,7 +177,9 @@ Module.m_methods.create = function(cls, t)
   local rs = t.rockspec and load_rockspec(t.rockspec)
   if rs then assert(rs.name) end
   t.name = t.name or (rs and rs.name)
-  _super(cls, t)
+  local r = _super(cls, t)
+  if rs then r:update_with_rockspec(rs, false) end
+  return r
 end
 
 Module.methods.update_with_rockspec = function(self, rs, fast)
