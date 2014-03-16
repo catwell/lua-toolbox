@@ -11,15 +11,17 @@ local fs = dirx.getfiles(DIR, "*.rockspec")
 local rs, m
 for i=1,#fs do
   rs = model.load_rockspec(fs[i])
-  m = Module:get_by_name(assert(rs.name))
-  if m then
-    if m:update_with_rockspec(rs, fast) then
-      print("updated: " .. rs.name)
+  if rs then
+    m = Module:get_by_name(assert(rs.name))
+    if m then
+      if m:update_with_rockspec(rs, fast) then
+        print("updated: " .. rs.name)
+      else
+        print("unchanged: " .. rs.name)
+      end
     else
-      print("unchanged: " .. rs.name)
+      Module:create{rockspec = rs}
+      print("created: " .. rs.name)
     end
-  else
-    Module:create{rockspec = rs}
-    print("created: " .. rs.name)
   end
 end

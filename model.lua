@@ -159,6 +159,9 @@ local load_rockspec = function(rs)
   if type(rs) == "string" then
     rs = lr_fetch.load_rockspec(rs)
   end
+  if rs == nil then -- invalid rockspec
+    return nil
+  end
   assert(type(rs) == "table")
   if type(rs.description) == "table" then
     rs.url = rs.url or rs.description.homepage
