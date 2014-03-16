@@ -92,7 +92,7 @@ class Base extends Widget
         li ->
           @render_endorse_button(m)
           a class: "module-name", href: @url_for("main.module", id: m.id), m\get_name()
-          p class: "module-description", m\get_description()
+          p class: "module-description", m\get_description_or_placeholder()
           @render_endorsers_and_labels(m, 3)
 
   render_errors: () =>

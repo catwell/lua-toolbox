@@ -180,6 +180,15 @@ Module.m_methods.create = function(cls, t)
   return r
 end
 
+Module.methods.get_description_or_placeholder = function(self)
+  local r = self:get_description()
+  if r:find("%w") then
+    return r
+  else
+    return "(no description provided)"
+  end
+end
+
 Module.methods.update_with_rockspec = function(self, rs, fast)
   -- -> changed?
   fast = (fast ~= false)

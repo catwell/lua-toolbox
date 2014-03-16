@@ -6,7 +6,7 @@ class Module extends require "views.base"
     @render_errors()
     div class: "cell", ->
       @render_endorse_button(@module)
-      p class: "module-description", @module\get_description()
+      p class: "module-description", @module\get_description_or_placeholder()
       @render_module_link(@module)
       @render_endorsers_and_labels(@module)
       @render_all_dependencies(@module)
