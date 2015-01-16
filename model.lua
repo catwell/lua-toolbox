@@ -182,7 +182,7 @@ end
 
 Module.methods.get_description_or_placeholder = function(self)
   local r = self:get_description()
-  if r:find("%w") then
+  if r and r:find("%w") then
     return r
   else
     return "(no description provided)"
