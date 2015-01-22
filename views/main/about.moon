@@ -9,7 +9,7 @@ class About extends require "views.base"
             text " website aiming at helping with the discovery and selection"
             text " of Lua modules."
         p ->
-            text "For that pupose, it lets its users endorse modules and"
+            text "For that purpose, it lets its users endorse modules and"
             text " ranks them by number of endorsements. It also has a labels"
             text " system to classify modules by intended use."
         p ->
