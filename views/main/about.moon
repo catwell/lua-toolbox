@@ -28,6 +28,11 @@ class About extends require "views.base"
             text " are disclosed, please get in touch with "
             a href:  "http://catwell.info", "Pierre Chapuis"
             text "."
+        p ->
+            text "This website runs on "
+            a href: "http://leafo.net/lapis/",
+                "Lapis " .. (require "lapis.version")
+            text "."
 
     h2 class: "list-header", "Metrics"
 
