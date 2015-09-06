@@ -59,11 +59,16 @@ app[{["module"] = "/module/:id"}] = respond_to {
       assert(u:endorses(m))
       u:deendorse(m)
     elseif action == "label" then
+      local tl = self.current_user:get_trust_level()
+      if tl < 1 then error("trust level too low") end
       assert_valid(self.params, {
         {"label", min_length = 3, max_length = 128},
       })
       l = Label:get_by_name(self.params.label)
       if not l then
+        if tl < 2 then
+          return fmt("label %s does not exist", self.params.label)
+        end
         l = Label:create{name = self.params.label}
       end
       m:label(l)

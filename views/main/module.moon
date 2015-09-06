@@ -10,7 +10,7 @@ class Module extends require "views.base"
       @render_module_link(@module)
       @render_endorsers_and_labels(@module)
       @render_all_dependencies(@module)
-      if @current_user and (@current_user\get_trust_level() > 1)
+      if @current_user and (@current_user\get_trust_level() > 0)
         form method: "POST", action: @url_for("main.module", id: @module.id), ->
           input type: "text", name: "label"
           input type: "submit", value: "add label"
