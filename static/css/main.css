@@ -245,3 +245,8 @@ ul.labels-list { display: inline; }
 }
 
 .labels-list a:visited { color: black; }
+
+.about_chart {
+  width: 100%;
+  height: 400px;
+}

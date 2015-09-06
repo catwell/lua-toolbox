@@ -1,3 +1,13 @@
+export chart_epm_js_tpl = [[
+    var ctx = document.getElementById("chart_epm").getContext("2d");
+    var data = {
+        labels: [%s],
+        datasets: [{data: [%s]}]
+    };
+    var options = {};
+    var myBarChart = new Chart(ctx).Bar(data, options);
+]]
+
 class About extends require "views.base"
   content: =>
 
@@ -20,12 +30,12 @@ class About extends require "views.base"
             text "."
 
     h2 class: "list-header", "Metrics"
+
     div class: "cell", ->
         h3 "Endorsements per module"
-        object type: "image/svg+xml", data: table.concat {
-            "#{@chartspree_root}/bar.svg",
-            "?series=#{table.concat(@endorsement_data.values, ",")}",
-            "&_labels=#{table.concat(@endorsement_data.labels, ",")}",
-            "&_show_legend=false",
-            "&_height=300px",
-        }
+        canvas id: "chart_epm", class: "about_chart"
+        script src: "/static/js/Chart.min.js"
+        script ->
+            raw string.format chart_epm_js_tpl,
+                "#{table.concat(@endorsement_data.labels, ",")}", 
+                "#{table.concat(@endorsement_data.values, ",")}"
