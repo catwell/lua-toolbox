@@ -1,9 +1,10 @@
-local tls_mailer = require "tls-mailer"
 local cfg = require("lapis.config").get()
 
 if cfg._name == "development" then
   return {}
 end
+
+local tls_mailer = require "resty-tls-mailer"
 
 local sender = {
   email = "no-reply@toolbox.luafr.org",

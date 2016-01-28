@@ -1,6 +1,7 @@
 *_temp/
 logs/
 devdata/
+resty/
 config.lua
 views/*.lua
 views/*/*.lua
