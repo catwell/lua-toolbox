@@ -4,7 +4,7 @@ if cfg._name == "development" then
   return {}
 end
 
-local tls_mailer = require "resty-tls-mailer"
+local tls_mailer = require "tls-mailer"
 
 local sender = {
   email = "no-reply@toolbox.luafr.org",
@@ -15,6 +15,8 @@ local mailer = tls_mailer.new{
   server = cfg.smtp.server,
   user = cfg.smtp.user,
   password = cfg.smtp.password,
+  use_tls = cfg.smtp.use_tls,
+  check_cert = cfg.smtp.check_cert,
 }
 
 local send_message = function(user, subject, text)
@@ -28,6 +30,10 @@ local send_message = function(user, subject, text)
     subject = subject,
     text = text,
   }
+  if (not r) and type(e) == "table" then
+    local ok, pretty = pcall(require, "pl.pretty")
+    e = ok and pretty.write(e) or "?"
+  end
   assert(r, e) -- TODO better
 end
 
