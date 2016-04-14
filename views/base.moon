@@ -40,6 +40,8 @@ class Base extends Widget
   render_module_link: (m) =>
     url = @module\get_url()
     if url
+      if url\sub(1, 10) == "github.com"
+        url = "https://#{url}"
       p -> a href: url, url
 
   render_modules_txtlist: (deps, prefix) =>
