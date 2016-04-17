@@ -2,7 +2,7 @@ local lua = require "lapis.lua"
 local lapis = require "lapis.init"
 
 local lapis_application = require "lapis.application"
-local respond_to = lapis_application.respond_to
+local respond_to = (require "app_helpers").respond_to
 local yield_error = lapis_application.yield_error
 local capture_errors = lapis_application.capture_errors
 
